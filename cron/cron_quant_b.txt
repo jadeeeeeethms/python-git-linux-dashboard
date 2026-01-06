@@ -1,0 +1,1 @@
+0 20 * * * cd /home/user/python-git-linux-dashboard && python3 scripts/daily_report.py >> logs/cron.log 2>&1
