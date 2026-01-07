@@ -1,6 +1,6 @@
 import streamlit as st
 from core.utils import (loadPrices,computeReturns,computePortfolioReturns,computeCumulativeReturns,computePortfolioVolatility,computePortfolioAnnualReturn,computeCorrelationMatrix)
-
+import numpy as np
 
 st.set_page_config(page_title="Quant B – Portfolio", layout="wide")
 
@@ -18,19 +18,13 @@ if len(tickers) < 2:
     st.stop()
 
 st.subheader("Portfolio allocation")
-weights_dict = {}
-total_weight = 0.0
-if "weights" not in st.session_state:
-    st.session_state.weights = {t: 1/len(tickers) for t in tickers}
-
+weights = []
 for ticker in tickers:
-    w = st.slider(f"Weight {ticker}",0.0,1.0,st.session_state.weights[ticker],0.05)
-    st.session_state.weights[ticker] = w
+    w = st.slider(f"Weight {ticker}", 0.0, 1.0, 1/len(tickers), 0.01)
+    weights.append(w)
 
-
-total_weight = sum(st.session_state.weights.values())
-weights = [w/total_weight for w in st.session_state.weights.values()]
-
+weights = np.array(weights)
+weights = weights / weights.sum()
 
 prices = loadPrices(tickers)
 returns = computeReturns(prices)
