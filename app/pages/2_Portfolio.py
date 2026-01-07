@@ -9,8 +9,12 @@ st.title("Portfolio Overview")
 
 tickers = ["AAPL", "MSFT", "GOOGL"]
 
-prices = loadPrices(tickers)
-returns = computeReturns(prices)
+try:
+    prices = loadPrices(tickers)
+    returns = computeReturns(prices)
+except Exception as e:
+    st.error("Data retrieval failed.Please try again later!")
+    st.stop()
 
 cum_assets = pd.DataFrame()
 for t in tickers:
