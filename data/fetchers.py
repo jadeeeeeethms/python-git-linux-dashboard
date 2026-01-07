@@ -1,34 +1,12 @@
+import yfinance as yf
 import pandas as pd
-from typing import Optional
+import streamlit as st
 
-
-def fetch_price(
-    symbol: str,
-    interval: str,
-    start: Optional[str] = None,
-    end: Optional[str] = None,
-) -> pd.DataFrame:
-    """
-    Fetch price data for one asset.
-
-    Parameters
-    ----------
-    symbol : str
-        Asset ticker (e.g. 'AAPL', 'BTC', 'EURUSD')
-    interval : str
-        Data frequency (e.g. '1m', '5m', '1h', '1d')
-    start : Optional[str]
-        Start date (ISO format), optional
-    end : Optional[str]
-        End date (ISO format), optional
-
-    Returns
-    -------
-    pd.DataFrame
-        Index : UTC datetime
-        Columns : ['price']
-    """
-    raise NotImplementedError(
-        "fetch_price is an interface and must be implemented "
-        "with a specific data source (API or scraping)."
-    )
+@st.cache_data(ttl=300) # 300s = 5 minutes
+def fetch_price(ticker, frequency="1d"):
+    data = yf.download(tickers=ticker,  period="1y",interval=frequency,progress=False)
+    if data.empty:
+        raise RuntimeError("No data returned")
+    df = data[["Close"]].rename(columns={"Close": "price"})
+    df.index = pd.to_datetime(df.index, utc=True)
+    return df
