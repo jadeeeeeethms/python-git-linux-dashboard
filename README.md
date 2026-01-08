@@ -27,10 +27,10 @@ This module serves as a foundation for more advanced quantitative extensions.
 
 # Data acquisition and processing
 
-Market data is retrieved from Yahoo Finance** through the `yfinance` API.
+Market data is retrieved from Yahoo Finance through the `yfinance` API.
 
 - Daily closing prices are downloaded over a rolling one-year period  
-- Data requests are cached locally with a 5-minute time-to-live to limit repeated
+- Data requests are cached locally with a 5mn time-to-live to limit repeated
   calls to the API  
 - Several validation checks are performed to ensure data integrity  
 
