@@ -1,8 +1,16 @@
 import yfinance as yf
 import pandas as pd
-import streamlit as st
 
-@st.cache_data(ttl=300) # 300s = 5 minutes
+try:
+    import streamlit as st
+    cache = st.cache_data
+except Exception:
+    def cache(func=None, **kwargs):
+        if func is None:
+            return lambda f: f
+        return func
+
+@cache(ttl=300)  # 300s = 5 minutes
 def fetch_price(ticker, frequency="1d"):
     data = yf.download(tickers=ticker,  period="1y",interval=frequency,progress=False)
     if data.empty:
