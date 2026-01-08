@@ -12,7 +12,11 @@ from core.strategies.single import buy_and_hold, momentum_vol_filter
 
 
 def _controls():
-    ticker = st.selectbox("Select asset", ["AAPL", "MSFT", "GOOGL", "AMZN", "META"], index=0)
+    ticker = st.selectbox(
+        "Select asset",
+        ["AAPL", "MSFT", "GOOGL", "AMZN", "META"],
+        index=0,
+    )
     mode = st.selectbox("Strategy", ["Buy & Hold", "Momentum + Vol target"], index=0)
 
     params = {"lookback_mom": 20, "lookback_vol": 20, "vol_target": 0.20}
@@ -25,21 +29,31 @@ def _controls():
         with c3:
             params["vol_target"] = st.slider("Vol target (annual)", 0.05, 0.60, 0.20, 0.01)
 
-    return ticker, mode, params
+    show_debug = st.toggle("Debug (show raw data checks)", value=True)
+    return ticker, mode, params, show_debug
 
 
 def _fetch_series(ticker: str) -> tuple[pd.Series, pd.Series]:
     df = loadPrices([ticker])
+
     if df is None or df.empty or ticker not in df.columns:
         st.error("Yahoo (yfinance) ne renvoie aucune donnée sur cette machine pour le moment.")
         st.stop()
 
     px = df[ticker].dropna()
+    px = px.sort_index()
+    px = px[~px.index.duplicated(keep="last")]
+
     if px.empty:
         st.error("Série de prix vide après nettoyage.")
         st.stop()
 
-    rets = computeReturns(px.to_frame())[ticker].dropna()
+    rets_df = computeReturns(px.to_frame())
+    if rets_df is None or rets_df.empty or ticker not in rets_df.columns:
+        st.error("computeReturns() n'a renvoyé aucun rendement.")
+        st.stop()
+
+    rets = rets_df[ticker].dropna()
     if rets.empty:
         st.error("Série de rendements vide après calcul.")
         st.stop()
@@ -72,15 +86,19 @@ def _stats(cum: pd.Series, rets: pd.Series) -> dict:
     }
 
 
+def _is_nan(x) -> bool:
+    return x != x
+
+
 st.set_page_config(page_title="Single Asset", layout="wide")
 st.title("Single Asset Dashboard")
-st.caption("Data automatically refreshed every 5 minutes")
+st.caption("Data automatically refreshed every 5 minutes (local cache)")
 
 if st.button("Refresh now"):
     st.cache_data.clear()
     st.rerun()
 
-ticker, mode, params = _controls()
+ticker, mode, params, show_debug = _controls()
 prices, returns = _fetch_series(ticker)
 
 st.subheader("Current price")
@@ -94,10 +112,10 @@ strat_cum = (1 + strat_returns).cumprod().rename("Strategy (cum value)")
 kpis = _stats(strat_cum, strat_returns)
 
 c1, c2, c3, c4 = st.columns(4)
-c1.metric("Sharpe", f"{kpis['sharpe']:.2f}" if kpis["sharpe"] == kpis["sharpe"] else "NA")
-c2.metric("Max drawdown", f"{kpis['mdd']:.2%}" if kpis["mdd"] == kpis["mdd"] else "NA")
-c3.metric("Ann. return", f"{kpis['ann_ret']:.2%}" if kpis["ann_ret"] == kpis["ann_ret"] else "NA")
-c4.metric("Ann. vol", f"{kpis['ann_vol']:.2%}" if kpis["ann_vol"] == kpis["ann_vol"] else "NA")
+c1.metric("Sharpe", f"{kpis['sharpe']:.2f}" if not _is_nan(kpis["sharpe"]) else "NA")
+c2.metric("Max drawdown", f"{kpis['mdd']:.2%}" if not _is_nan(kpis["mdd"]) else "NA")
+c3.metric("Ann. return", f"{kpis['ann_ret']:.2%}" if not _is_nan(kpis["ann_ret"]) else "NA")
+c4.metric("Ann. vol", f"{kpis['ann_vol']:.2%}" if not _is_nan(kpis["ann_vol"]) else "NA")
 
 st.subheader("Total return")
 st.write(f"{kpis['tot_ret']:.2%}")
@@ -108,3 +126,9 @@ st.line_chart(pd.concat([price_norm, strat_cum], axis=1).dropna())
 st.subheader("Position (exposure)")
 st.line_chart(position.to_frame().dropna())
 
+if show_debug:
+    st.subheader("Debug checks")
+    st.write("Prices unique values:", prices.nunique())
+    st.write("Returns unique values:", returns.nunique())
+    st.write("Returns describe:")
+    st.dataframe(returns.describe())
