@@ -1,10 +1,15 @@
+import sys
+from pathlib import Path
+ROOT_DIR = Path(__file__).resolve().parents[1]
+sys.path.append(str(ROOT_DIR))
+from data.finnhub_quote import fetch_quote
 import streamlit as st
 from core.utils import (loadPrices,computeReturns,computePortfolioReturns,computeCumulativeReturns,computePortfolioVolatility,computePortfolioAnnualReturn,computeCorrelationMatrix)
-
+import numpy as np
 
 st.set_page_config(page_title="Quant B – Portfolio", layout="wide")
 
-st.title("Multi-Asset Portfolio Dashboard")
+st.title("Multi-Asset Portfolio Dashboard") #visual
 st.caption("Data automatically refreshed every 5 minutes")
 
 if st.button("Refresh now"):
@@ -18,27 +23,25 @@ if len(tickers) < 2:
     st.stop()
 
 st.subheader("Portfolio allocation")
-weights_dict = {}
-total_weight = 0.0
-if "weights" not in st.session_state:
-    st.session_state.weights = {t: 1/len(tickers) for t in tickers}
-
+weights = []
 for ticker in tickers:
-    w = st.slider(f"Weight {ticker}",0.0,1.0,st.session_state.weights[ticker],0.05)
-    st.session_state.weights[ticker] = w
+    w = st.slider(f"Weight {ticker}", 0.0, 1.0, 1/len(tickers), 0.01)
+    weights.append(w)
 
-
-total_weight = sum(st.session_state.weights.values())
-weights = [w/total_weight for w in st.session_state.weights.values()]
-
+weights = np.array(weights)
+weights = weights / weights.sum()
 
 prices = loadPrices(tickers)
 returns = computeReturns(prices)
-st.subheader("Current prices")
 
+st.subheader("Current prices (Finnhub)")
 cols = st.columns(len(tickers))
-for col, ticker in zip(cols, tickers):
-    col.metric( label=f"{ticker}", value=round(prices[ticker].iloc[-1], 2))
+for col, t in zip(cols, tickers):
+    try: #robustness
+        q = fetch_quote(t)
+        col.metric(t, f"{q['c']:.2f}", f"{q['d']:.2f}")
+    except Exception:
+        col.metric(t, "N/A")
 
 portfolio_returns = computePortfolioReturns(returns, weights)
 portfolio_cumulative = computeCumulativeReturns(portfolio_returns)
