@@ -1,49 +1,27 @@
 import pandas as pd
-from typing import List
+import numpy as np
 from data.fetchers import fetch_price
 
-
-def loadPrices(tickers, freq="1d"):
+def loadPrices(tickers):
     prices = []
-    for ticker in tickers:
-        data = fetch_price(ticker, freq)
-        #data["price"] est un DataFrame à 1 colonne
-        df = data[["price"]].rename(columns={"price": ticker})
-        prices.append(df)
-    priceDf = pd.concat(prices, axis=1)
-    priceDf = priceDf.dropna()
-    return priceDf
+    for t in tickers:
+        prices.append(fetch_price(t))
+    return pd.concat(prices, axis=1)
 
+def computeReturns(prices):
+    return prices.pct_change().dropna()
 
-def computeReturns(priceDf):
-    returns = priceDf.pct_change()
-    returns = returns.dropna()
-    return returns
+def computePortfolioReturns(returns, weights):
+    return returns.dot(weights)
 
-def computePortfolioReturns(returnsDf, weights=None):
-    nbAssets = returnsDf.shape[1]
-    if weights is None:
-        weights = [1/nbAssets]*nbAssets
-    portfolioReturns = returnsDf.dot(weights)
-    return portfolioReturns
+def computeCumulativeReturns(returns):
+    return (1 + returns).cumprod()
 
-#rendement cumulé portefeuille
-def computeCumulativeReturns(portfolioReturns):
-    cumulative = (1 + portfolioReturns).cumprod()
-    return cumulative
+def computePortfolioVolatility(portfolio_returns):
+    return portfolio_returns.std()*np.sqrt(252)
 
-#volatilité portefeuille
-def computePortfolioVolatility(portfolioReturns):
-    vol = portfolioReturns.std()*(252**0.5)
-    return vol
+def computePortfolioAnnualReturn(portfolio_returns):
+    return portfolio_returns.mean()*252
 
-#rendement annuel moyen portefeuille
-def computePortfolioAnnualReturn(portfolioReturns):
-    avgReturn = portfolioReturns.mean()*252
-    return avgReturn
-
-#mat correlation
-def computeCorrelationMatrix(returnsDf):
-    corr=returnsDf.corr()
-    return corr
-
+def computeCorrelationMatrix(returns):
+    return returns.corr()
