@@ -73,7 +73,7 @@ def _stats(cum: pd.Series, rets: pd.Series) -> dict:
 
 
 st.set_page_config(page_title="Single Asset", layout="wide")
-st.title("Quant A — Single Asset Dashboard")
+st.title("Single Asset Dashboard")
 st.caption("Data automatically refreshed every 5 minutes")
 
 if st.button("Refresh now"):
@@ -107,3 +107,4 @@ st.line_chart(pd.concat([price_norm, strat_cum], axis=1).dropna())
 
 st.subheader("Position (exposure)")
 st.line_chart(position.to_frame().dropna())
+
