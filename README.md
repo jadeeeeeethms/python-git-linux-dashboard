@@ -106,3 +106,19 @@ Quant A relies on shared project components for:
 
 This modular structure ensures coherence with other quantitative modules and
 facilitates future extensions of the project.
+
+# Interpretation of results
+
+The dashboard presents the performance of different strategies applied to a
+single financial asset.
+
+The Buy & Hold strategy is used as a benchmark and reflects the natural price
+evolution of the asset. Its performance strongly depends on market trends.
+The momentum strategy with volatility targeting aims to control risk by
+adjusting exposure dynamically. This generally leads to smoother performance
+and lower volatility, but may also reduce participation in strong market trends.
+
+These results illustrate the trade-off between return and risk management, and
+highlight that risk-controlled strategies do not systematically outperform
+simple passive benchmarks.
+
