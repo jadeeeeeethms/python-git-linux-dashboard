@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 
+from core.predict import forecast_log_trend
 from core.utils import loadPrices, computeReturns
 from core.metrics import (
     max_drawdown,
@@ -29,8 +30,12 @@ def _controls():
         with c3:
             params["vol_target"] = st.slider("Vol target (annual)", 0.05, 0.60, 0.20, 0.01)
 
+    st.subheader("Forecast")
+    show_fc = st.toggle("Show forecast", value=True)
+    horizon = st.slider("Forecast horizon (business days)", 5, 60, 20, 5)
+
     show_debug = st.toggle("Debug (show raw data checks)", value=True)
-    return ticker, mode, params, show_debug
+    return ticker, mode, params, show_fc, horizon, show_debug
 
 
 def _fetch_series(ticker: str) -> tuple[pd.Series, pd.Series]:
@@ -98,7 +103,7 @@ if st.button("Refresh now"):
     st.cache_data.clear()
     st.rerun()
 
-ticker, mode, params, show_debug = _controls()
+ticker, mode, params, show_fc, horizon, show_debug = _controls()
 prices, returns = _fetch_series(ticker)
 
 st.subheader("Current price")
@@ -126,9 +131,24 @@ st.line_chart(pd.concat([price_norm, strat_cum], axis=1).dropna())
 st.subheader("Position (exposure)")
 st.line_chart(position.to_frame().dropna())
 
+if show_fc:
+    st.subheader("Forecast (price + confidence band)")
+    try:
+        fc = forecast_log_trend(prices, horizon=int(horizon), alpha=0.05)
+
+        hist = prices.rename("History")
+        yhat = fc["yhat"].rename("Forecast")
+        lo = fc["lower"].rename("Lower 95%")
+        hi = fc["upper"].rename("Upper 95%")
+
+        st.line_chart(pd.concat([hist, yhat, lo, hi], axis=1))
+    except Exception as e:
+        st.warning(f"Forecast not available: {e}")
+
 if show_debug:
     st.subheader("Debug checks")
     st.write("Prices unique values:", prices.nunique())
     st.write("Returns unique values:", returns.nunique())
+    st.write("Price date range:", prices.index.min(), "->", prices.index.max())
     st.write("Returns describe:")
     st.dataframe(returns.describe())
