@@ -96,6 +96,18 @@ data pipeline:
 When an issue is detected, the application stops gracefully and displays a clear
 error message instead of crashing.
 
+# Optional bonus – Predictive model
+
+As an optional extension, a simple predictive model is included to provide a basic
+forecast of future asset prices.
+The model is based on a linear regression applied to the logarithm of historical
+prices. Future values are projected over a user-defined horizon, and confidence
+intervals are added to illustrate forecast uncertainty. The results are displayed
+directly on the dashboard alongside historical data.
+This component is intentionally simple and is meant to illustrate how basic
+forecasting methods can be integrated into a quantitative analysis framework,
+rather than to generate trading signals.
+
 # Integration within the project
 
 Quant A relies on shared project components for:
