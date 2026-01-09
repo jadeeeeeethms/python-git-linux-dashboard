@@ -135,15 +135,14 @@ if show_fc:
     st.subheader("Forecast (price + confidence band)")
     try:
         fc = forecast_log_trend(prices, horizon=int(horizon), alpha=0.05)
-
         hist = prices.rename("History")
         yhat = fc["yhat"].rename("Forecast")
         lo = fc["lower"].rename("Lower 95%")
         hi = fc["upper"].rename("Upper 95%")
-
         st.line_chart(pd.concat([hist, yhat, lo, hi], axis=1))
     except Exception as e:
-        st.warning(f"Forecast not available: {e}")
+        st.error("Forecast failed")
+        st.exception(e)
 
 if show_debug:
     st.subheader("Debug checks")
@@ -152,3 +151,4 @@ if show_debug:
     st.write("Price date range:", prices.index.min(), "->", prices.index.max())
     st.write("Returns describe:")
     st.dataframe(returns.describe())
+
