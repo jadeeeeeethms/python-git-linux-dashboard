@@ -6,6 +6,19 @@ from data.finnhub_quote import fetch_quote
 import streamlit as st
 from core.utils import (loadPrices,computeReturns,computePortfolioReturns,computeCumulativeReturns,computePortfolioVolatility,computePortfolioAnnualReturn,computeCorrelationMatrix)
 import numpy as np
+import os
+
+#def load_finnhub_key():
+    #key_file = Path(__file__).resolve().parents[1] / "apikey.txt"
+    #if key_file.exists():
+     #   with open(key_file) as f:
+       #     for line in f:
+        #        if line.startswith("FINNHUB_API_KEY="):
+         #           return line.strip().split("=", 1)[1]
+   # return None ( ancienne methode de chargement )
+
+#FINNHUB_API_KEY = load_finnhub_key()
+
 
 st.set_page_config(page_title="Quant B – Portfolio", layout="wide")
 
