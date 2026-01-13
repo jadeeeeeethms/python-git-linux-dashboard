@@ -1,0 +1,4 @@
+Date: 2026-01-13
+Annual return: 31.55%
+Volatility: 23.84%
+Max drawdown: -24.41%
